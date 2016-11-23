@@ -1,0 +1,7 @@
+%form.payment-gateway-form{ action: request.params.target_url, method: "post" }
+  %input#version{         name: "Data",             type: "hidden", value: request.params.data }
+  %input#tpe{             name: "Seal",             type: "hidden", value: request.params.seal }
+  %input#date{            name: "InterfaceVersion", type: "hidden", value: request.params.interface_version }
+
+  %button.btn.btn-primary{ name: "submit_cic_payment_form", type: "submit" }
+    = t('stall.payments.gateway.pay')
