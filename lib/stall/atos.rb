@@ -5,6 +5,7 @@ module Stall
     extend ActiveSupport::Autoload
 
     autoload :PaymentParams
+    autoload :PaymentResponse
     autoload :Version
 
     autoload :FakeGatewayPaymentNotification

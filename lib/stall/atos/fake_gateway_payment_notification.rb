@@ -6,47 +6,46 @@ module Stall
       def params
         {}.tap do |params|
           params.merge!(options)
-          params['MAC'] = bank_mac_key
         end
       end
 
       private
 
-      def format_date(date)
-        date.strftime("%d/%m/%Y_a_%H:%M:%S")
-      end
-
       def options
         @options ||= {
-          'TPE' => Stall::Atos::Gateway.tpe,
-          'date' => format_date(Time.now),
-          'montant' => price_with_currency(cart.total_price),
-          'reference' => transaction_id,
-          'texte-libre' => cart.reference,
-          'code-retour' => "payetest",
-          'cvx' => "oui",
-          'vld' => "1219",
-          'brand' => "na",
-          'status3ds' => "-1",
-          'numauto' => 'xxxx',
-          'motifrefus' => "",
-          'originecb' => "00x",
-          'bincb' => "000001",
-          'hpancb' => "F6FBF44A7EC30941DA2E411AA8A50C77F174B2BB",
-          'ipclient' => "01.01.01.01",
-          'originetr' => "FRA",
-          'veres' => "",
-          'pares' => "",
-          'modepaiement' => "CB"
+          "Data" => data,
+          "Seal" => Stall::Atos::PaymentParams.calculate_seal_for(data),
+          "InterfaceVersion" => "HP_2.0",
+          "Encode" => ""
         }
       end
 
-      def bank_mac_key
-        @bank_mac_key ||= cic_payment.response_mac(options)
-      end
-
-      def cic_payment
-        @cic_payment ||= Stall::Atos::CicPayment.new(gateway)
+      def data
+        @data ||= Stall::Atos::PaymentParams.serialize(
+          merchantId: gateway.merchant_id,
+          transactionReference: gateway.transaction_id,
+          keyVersion: gateway.key_version,
+          amount: cart.total_price.cents,
+          currencyCode: cart.currency.iso_numeric,
+          transactionDateTime: Time.now.iso8601,
+          captureDay: '0',
+          captureMode: 'AUTHOR_CAPTURE',
+          orderChannel: 'INTERNET',
+          responseCode: '00',
+          acquirerResponseCode: '00',
+          authorisationId: '12345',
+          guaranteeIndicator: 'N',
+          cardCSCResultCode: '4E',
+          panExpiryDate: '210001',
+          paymentMeanBrand: 'VISA',
+          paymentMeanType: 'CARD',
+          customerIpAddress: '127.0.0.1',
+          maskedPan: '4100##########00',
+          holderAuthentRelegation: 'N',
+          holderAuthentStatus: '3D_ERROR',
+          transactionOrigin: 'INTERNET',
+          paymentPattern: 'ONE_SHOT'
+        )
       end
     end
   end

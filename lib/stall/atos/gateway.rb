@@ -43,6 +43,19 @@ module Stall
 
       private
 
+      # Override the transaction id methods, since the Atos gateway only
+      # authorize numbers
+      def next_transaction_id
+        if (last_transaction = Payment.order("data->>'transaction_id' DESC").select(:data).first)
+          if (id = last_transaction.transaction_id)
+            index = id[-5..-1].to_i + 1
+            return transaction_id_for(index)
+          end
+        end
+
+        transaction_id_for(1)
+      end
+
       def transaction_id_for(index)
         super.gsub(/-/, '')
       end
@@ -81,11 +94,11 @@ module Stall
         end
 
         def rendering_options
-          { text: "version=2\ncdr=#{ return_code }\n" }
+          { nothing: true }
         end
 
         def success?
-          response[:success]
+          response.success?
         end
 
         def notify
@@ -93,11 +106,11 @@ module Stall
         end
 
         def valid?
-          response.length > 1
+          response.valid?
         end
 
         def cart
-          @cart ||= Cart.find_by_reference(response['texte-libre'])
+          @cart ||= Cart.find_by_payment_transaction_id(response.transaction_id)
         end
 
         def gateway
@@ -107,17 +120,9 @@ module Stall
         private
 
         def response
-          @response ||= Stall::Atos::CicPayment.new(gateway).response(
-            Rack::Utils.parse_nested_query(request.raw_post)
+          @response ||= Stall::Atos::PaymentResponse.new(
+            gateway, Rack::Utils.parse_nested_query(request.raw_post)
           )
-        end
-
-        def return_code
-          if success? || (response['code-retour'].try(:downcase) == 'annulation')
-            '0'
-          else
-            '1'
-          end
         end
       end
     end

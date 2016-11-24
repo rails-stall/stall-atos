@@ -12,20 +12,19 @@ module Stall
       end
 
       def data
-        @data ||= serialize(
+        @data ||= self.class.serialize(
           amount: cart.total_price.cents,
           currencyCode: cart.currency.iso_numeric,
           merchantId: gateway.merchant_id,
           transactionReference: gateway.transaction_id(refresh: true),
           keyVersion: gateway.key_version,
-
           automaticResponseUrl: gateway.payment_urls.payment_notification_url,
           normalReturnUrl: gateway.payment_urls.payment_success_return_url
         )
       end
 
       def seal
-        @seal ||= Digest::SHA256.hexdigest([data, gateway.secret_key].join)
+        @seal ||= self.class.calculate_seal_for(data)
       end
 
       private
@@ -34,8 +33,19 @@ module Stall
       #
       #   key1=value1|key2=value2|...|keyN=valueN
       #
-      def serialize(hash)
+      def self.serialize(hash)
         hash.map { |item| item.map(&:to_s).join('=') }.join('|')
+      end
+
+      def self.unserialize(string)
+        string.split('|').each_with_object({}.with_indifferent_access) do |str, hash|
+          key, value = str.split('=')
+          hash[key] = value
+        end
+      end
+
+      def self.calculate_seal_for(data)
+        Digest::SHA256.hexdigest([data, Stall::Atos::Gateway.secret_key].join)
       end
     end
   end
