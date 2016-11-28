@@ -41,6 +41,14 @@ module Stall
         test_mode ? test_payment_url : payment_url
       end
 
+      # The gateway interface only provides one return URL, so we use the
+      # payment notification state  to determine wether to forward the customer
+      # to the next checkout step or not.
+      #
+      def synchronous_payment_notification?
+        true
+      end
+
       private
 
       # Override the transaction id methods, since the Atos gateway only
