@@ -70,6 +70,19 @@ You can find the route with :
 rake routes | grep payment/notify
 ```
 
+### Faking a payment notification
+
+From your console :
+
+```ruby
+# Fetch the cart you want to simulate a payment notification for
+cart = Cart.last
+# Create the fake notification request
+request = Stall::Atos::FakeGatewayPaymentNotification.new(cart)
+# Pass it to the PaymentNotificationService, where the simulation will take place
+Stall::PaymentNotificationService.new('atos', request).call
+```
+
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/stall-rails/stall-atos.
