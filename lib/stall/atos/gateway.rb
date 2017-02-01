@@ -101,20 +101,20 @@ module Stall
           @request = request
         end
 
-        def rendering_options
-          { nothing: true }
+        def valid?
+          response.valid?
         end
 
         def success?
           response.success?
         end
 
-        def notify
-          cart.payment.pay! if success?
+        def process
+          valid? && success?
         end
 
-        def valid?
-          response.valid?
+        def rendering_options
+          { nothing: true }
         end
 
         def cart
