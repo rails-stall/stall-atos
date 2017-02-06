@@ -15,6 +15,7 @@ module Stall
         @data ||= self.class.serialize(
           amount: cart.total_price.cents,
           currencyCode: cart.currency.iso_numeric,
+          orderId: cart.reference,
           merchantId: gateway.merchant_id,
           transactionReference: gateway.transaction_id(refresh: true),
           keyVersion: gateway.key_version,
