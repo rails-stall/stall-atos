@@ -13,7 +13,7 @@ module Stall
 
       def data
         @data ||= self.class.serialize(
-          amount: cart.total_price.cents,
+          amount: cart.total_price.cents.to_i,
           currencyCode: cart.currency.iso_numeric,
           orderId: cart.reference,
           merchantId: gateway.merchant_id,
